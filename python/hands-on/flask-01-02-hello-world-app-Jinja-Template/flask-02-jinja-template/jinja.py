@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def head():
-    return render_template('index.html', number1 = 7000, number2 = 9000)
+    return render_template('index.html', number1 = 7000, number2 = 4000)
 
 
 @app.route('/mult')
