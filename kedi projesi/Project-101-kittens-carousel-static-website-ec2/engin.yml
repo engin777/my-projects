@@ -4,7 +4,7 @@ Description: |
   Kitten Carousel is a static website application deployed with Apache Web Server on AWS Elastic Compute Cloud (EC2) Instance using AWS Cloudformation Service.
 
 Resources:
-  LeventCFNInstance: 
+  EnginCFNInstance: 
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-08e4e35cccc6189f4
