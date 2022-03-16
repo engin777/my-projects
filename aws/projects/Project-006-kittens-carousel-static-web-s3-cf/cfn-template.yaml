@@ -57,7 +57,7 @@ Resources:
             Cookies:
               Forward: none 
           TargetOriginId: KittensOrigin  
-          ViewerProtocolPolicy: allow-all 
+          ViewerProtocolPolicy: redirect-to-https 
         DefaultRootObject: index.html
         Enabled: true
         HttpVersion: 'http2'
