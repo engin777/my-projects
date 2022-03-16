@@ -1,9 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   The Phonebook Application aims to create a phonebook application in Python and deployed as a web application with Flask on AWS Application Load Balancer with Auto Scaling Group of Elastic Compute Cloud (EC2) Instances and Relational Database Service (RDS) using AWS Cloudformation Service.
+
 Parameters:
   paramVPC:
-    Description: Select your vpc
+    Description: Select your VPC
     Type: AWS::EC2::VPC::Id
 
   paramSubnet:
@@ -25,8 +26,9 @@ Parameters:
   paramDBName:
     Description: Enter the name of database
     Type: String
+    Default: clarusway_phonebook
   
-  paramDBUsername:
+  paramDBUserName:
     NoEcho: 'true'
     Description: Username for MySQL database access
     Type: String
@@ -34,8 +36,9 @@ Parameters:
   paramDBPassword:
     NoEcho: 'true'
     Description: Password MySQL database access
-    Type: String
-  
+    Type: String   
+
+   
 Mappings:
   RegionImageMap:
     us-east-1:
@@ -48,10 +51,11 @@ Mappings:
       AMI: ami-0dc8f589abe99f538
     eu-west-1:
       AMI: ami-058b1b7fe545997ae
- 
+  
+  
 Resources:
-  # alb security group
-  loadBalancerSecGrp:
+
+  LoadBalancerSecGrp:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable http for ALB # Required
@@ -60,16 +64,15 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-      VpcId: !Ref paramVPC
       Tags:
         - Key: Name
           Value: SecGrpALB
-      
-  
-  securityGrpEC2s:
+      VpcId: !Ref paramVPC
+
+  EC2SecGrp:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Enable HTTP and SSH # Required
+      GroupDescription: Enable http and ssh # Required
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -78,13 +81,14 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          SourceSecurityGroupId: !GetAtt loadBalancerSecGrp.GroupId
+          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !GetAtt LoadBalancerSecGrp.GroupId
       Tags:
         - Key: Name
-          Value: secGrpEC2
+          Value: EC2SecGrp
       VpcId: !Ref paramVPC
 
-  securityGrpRDS:
+  RDSSecGrp:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Enable Mysql port for ec2 # Required
@@ -92,13 +96,13 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          SourceSecurityGroupId: !GetAtt securityGrpEC2s.GroupId
+          SourceSecurityGroupId: !GetAtt  LoadBalancerSecGrp.GroupId
       Tags:
         - Key: Name
-          Value: secGrpRDS
-      VpcId: !Ref paramVPC
+          Value: RDSSecGrp
+      VpcId: !Ref paramVPC   
 
-  targetGrp:
+  TargetGrp:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 10
@@ -107,27 +111,27 @@ Resources:
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
-      VpcId: !Ref paramVPC
+      VpcId: !Ref paramVPC  
 
-  loadBalancer:
+  LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       SecurityGroups:
-        - !GetAtt loadBalancerSecGrp.GroupId
+        - !GetAtt LoadBalancerSecGrp.GroupId
       Subnets: !Ref paramSubnet
-      Type: application
-
-  listenerProje:
+      Type: application      
+  
+  ListenerProje:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions: # Required
         - Type: forward
-          TargetGroupArn: !Ref targetGrp
-      LoadBalancerArn: !Ref loadBalancer # Required
+          TargetGroupArn: !Ref TargetGrp
+      LoadBalancerArn: !Ref LoadBalancer # Required
       Port: 80
-      Protocol: HTTP
+      Protocol: HTTP 
 
-  autoscalingGrp:
+  AutoScaling:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AvailabilityZones: !GetAZs 
@@ -135,40 +139,40 @@ Resources:
       HealthCheckGracePeriod: 90
       HealthCheckType: ELB
       LaunchTemplate:
-        LaunchTemplateId: !Ref launchTemplate # add later
-        Version: !GetAtt launchTemplate.LatestVersionNumber
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MaxSize: 3 # Required
       MinSize: 1 # Required
-      TargetGroupARNs:
-        - !Ref targetGrp
-  
-  cpuPolicy:
+       TargetGroupARNs:
+         - !Ref TargetGrp
+
+  CpuPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: !Ref autoscalingGrp # Required
+      AutoScalingGroupName: !Ref AutoScaling  # Required
       PolicyType: TargetTrackingScaling
       TargetTrackingConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ASGAverageCPUUtilization
-        TargetValue: 60.0
-
-  launchTemplate:
+        TargetValue: 60.0    
+  
+  LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: !FindInMap
+        ImageId: !FindInMap 
           - RegionImageMap
           - !Ref AWS::Region
           - AMI
         InstanceType: !Ref paramInsType
         KeyName: !Ref paramKeyName
         SecurityGroupIds:
-          - !GetAtt securityGrpEC2s.GroupId
+          - !GetAtt EC2SecGrp.GroupId
         TagSpecifications:
           - ResourceType: instance 
             Tags: 
               - Key: Name
-                Value: !Sub Web Server of ${AWS::StackName} 
+                Value: !Sub Web Server of ${AWS::StackName}
         UserData: 
           Fn::Base64: 
             Fn::Sub:
@@ -181,9 +185,9 @@ Resources:
                 pip3 install sqlalchemy
                 pip3 install Flask-SQLAlchemy
                 cd /home/ec2-user
-                echo "${RDSEndPoint}" > dbserver.endpoint
+                echo "${RDSUriMySql}" > dbserver.endpoint
                 chmod 777 dbserver.endpoint
-                FOLDER="https://raw.githubusercontent.com/engin777/my-projects/main/aws/projects/Project-004-Phonebook-Application"
+                FOLDER="https://raw.githubusercontent.com/MuratYarali/my-projects/main/aws/projects/Project-004-Phonebook-Application"
                 curl $FOLDER/phonebook-app.py -o phonebook-app.py
                 mkdir templates && cd templates
                 curl $FOLDER/templates/add-update.html -o add-update.html
@@ -191,8 +195,8 @@ Resources:
                 curl $FOLDER/templates/delete.html -o delete.html
                 cd ..
                 python3 phonebook-app.py
-              - RDSEndPoint: !GetAtt dbRDSPhoneBookApp.Endpoint.Address
-  
+              - RDSUriMySql: !GetAtt dbRDSPhoneBookApp.Endpoint.Address
+
   dbRDSPhoneBookApp:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -206,16 +210,6 @@ Resources:
       MasterUserPassword: !Ref paramDBPassword
       MasterUsername: !Ref paramDBUsername
       VPCSecurityGroups:
-        - !GetAtt securityGrpRDS.GroupId
+        - !GetAtt RDSSecGrp.GroupId           
 
 Outputs:
-  AppUrl:
-    Description: Url of the ELB
-    Value: !Join
-      - ""
-      - - "http://"
-        - !GetAtt loadBalancer.DNSName 
-
-  RDSEndPoint:
-    Description: 'The RDS Endpoint of MySQL DB'
-    Value: !GetAtt dbRDSPhoneBookApp.Endpoint.Address
