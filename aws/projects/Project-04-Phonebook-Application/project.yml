@@ -61,11 +61,11 @@ Resources:
           pip3 install sqlalchemy
           pip3 install Flask-SQLAlchemy
           cd /home/ec2-user
-          curl https://raw.githubusercontent.com/MuratYarali/my-projects/main/aws/projects/Project-004-Phonebook-Application/phonebook-app.py -o phonebook-app.py
+          curl https://raw.githubusercontent.com/engin777/my-projects/main/aws/projects/Project-04-Phonebook-Application/phonebook-app.py -o phonebook-app.py
           mkdir templates && cd templates
-          curl https://raw.githubusercontent.com/MuratYarali/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/add-update.html -o add-update.html
-          curl https://raw.githubusercontent.com/MuratYarali/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/delete.html -o delete.html
-          curl https://raw.githubusercontent.com/MuratYarali/my-projects/main/aws/projects/Project-004-Phonebook-Application/templates/index.html -o index.html
+          curl https://raw.githubusercontent.com/engin777/my-projects/main/aws/projects/Project-04-Phonebook-Application/templates/add-update.html -o add-update.html
+          curl https://raw.githubusercontent.com/engin777/my-projects/main/aws/projects/Project-04-Phonebook-Application/templates/delete.html -o delete.html
+          curl https://raw.githubusercontent.com/engin777/my-projects/main/aws/projects/Project-04-Phonebook-Application/templates/index.html -o index.html
           cd ..
           python3 phonebook-app.py
 
